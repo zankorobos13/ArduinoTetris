@@ -1,15 +1,15 @@
 const int LED_matrix_size_x = 3;
 const int LED_matrix_size_y = 3;
-const int PWM_period_ms = 20;
+const int PWM_period_ms = 2;
 
 bool LED_matrix[LED_matrix_size_y][LED_matrix_size_x] = {
-  {true, false, true},
+  {true, true, true},
   {false, true, false},
   {true, false, true}
 };
 
-uint8_t LED_column_pins[] = {2, 3, 4};
-uint8_t LED_row_pins[] = {5, 6, 7};
+uint8_t LED_column_pins[LED_matrix_size_x] = {2, 3, 4};
+uint8_t LED_row_pins[LED_matrix_size_y] = {5, 6, 7};
 
 void setup() {
   Serial.begin(9600);
@@ -39,6 +39,15 @@ void loop() {
       digitalWrite(LED_column_pins[current_step_on_columns-1], LOW);
     }
     digitalWrite(LED_column_pins[current_step_on_columns], HIGH);
+
+    for (int i = 0; i < LED_matrix_size_y; i++){
+      if (LED_matrix[i][current_step_on_columns]) {
+        digitalWrite(LED_row_pins[i], HIGH);
+      }
+      else{
+        digitalWrite(LED_row_pins[i], LOW);
+      }
+    }
 
     current_step_on_columns++;
     prev_ms = ms;
