@@ -38,25 +38,3 @@ public:
         }
     }
 };
-
-struct I_Figure{
-public:
-    static int spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
-    static int rotation_array[4][3][2] = {
-        {{1, 1}, {0, 0}, {-1, -1}},
-        {{-1, 1}, {0, 0}, {1, -1}},
-        {{-1, -1}, {0, 0}, {1, 1}},
-        {{1, -1}, {0, 0}, {-1, 1}}
-    };
-};
-
-struct L_Figure {
-public:
-    static int spawn_coordinates[3][2] = {{0, 2}, {1, 2}, {1, 3}};
-    static int rotation_array[4][3][2] = {
-        {{1, 0}, {0, 1}, {-1, 0}},
-        {{0, 1}, {-1, 0}, {0 -1}},
-        {{-1, 0}, {0, -1}, {1, 0}},
-        {{0, -1}, {1, 0}, {0, 1}}
-    };
-};
