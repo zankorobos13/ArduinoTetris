@@ -6,6 +6,9 @@ const int PWM_period_ms = 1;
 
 const int FALL_SPEED_MS = 1500;
 const uint8_t NOISE_PIN = A4;
+const uint8_t LEFT_BTN = A6;
+const uint8_t RIGHT_BTN = A4;
+const int DEBOUNCE_TIME_MS = 100;
 
 int I_spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
 int I_rotation_array[4][3][2] = {
@@ -49,6 +52,8 @@ uint8_t LED_row_pins[LED_matrix_size_y] = {3, 2, A1, A2, A3, 13};
 
 int current_step_on_columns = 0;
 unsigned long long prev_ms_LED_matrix_control = 0;
+unsigned long long prev_ms_left = 0;
+unsigned long long prev_ms_right = 0;
 unsigned long long ms = 0;
 
 void LED_matrix_update(){
@@ -127,45 +132,97 @@ void Game(){
     current_figure = new_figure;
     isFigureOnMatrix = true;
   }
-  else{
-    for (int i = 0; i < Figure::BLOCK_SIZE; i++){
-        play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 2;
-    }
+  
+  for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+      play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 2;
+  }
 
-    if (ms - prev_ms_figure_fall >= FALL_SPEED_MS){
-      if(CheckFigurePositionForFall()){
-        for (int i = 0; i < Figure::BLOCK_SIZE; i++){
-          play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
-          current_figure.coordinates[i][0]++;
-        }
+  if (ms - prev_ms_figure_fall >= FALL_SPEED_MS){
+    if(CheckFigurePositionForFall()){
+      for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+        play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
+        current_figure.coordinates[i][0]++;
       }
-      else{
-        isFigureOnMatrix = false;
-        for (int i = 0; i < Figure::BLOCK_SIZE; i++){
-          play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 1;
-        }
+    }
+    else{
+      isFigureOnMatrix = false;
+      for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+        play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 1;
       }
-      prev_ms_figure_fall = ms;
+    }
+    prev_ms_figure_fall = ms;
+  }
+  
+  int read_left = analogRead(LEFT_BTN);
+  int read_right = analogRead(RIGHT_BTN);
+  //Serial.print(read_left);
+  //Serial.print(" ");
+  //Serial.println(read_right);
+
+  if (read_left > 512 && ms - prev_ms_left > DEBOUNCE_TIME_MS && CheckFigurePositionLeft()){
+    for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+      play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
+      current_figure.coordinates[i][1]--;
+      prev_ms_left = ms;
+    }
+  }
+
+  if (read_right > 512 && ms - prev_ms_right > DEBOUNCE_TIME_MS && CheckFigurePositionRight()){
+    for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+      play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
+      current_figure.coordinates[i][1]++;
+      prev_ms_right = ms;
     }
   }
 }
 
 bool CheckFigurePositionForFall(){
-  bool isAvailableTofall = true;
+  bool isAvailableToFall = true;
   for (int i = 0; i < Figure::BLOCK_SIZE; i++){
     
     if (current_figure.coordinates[i][0] == LED_matrix_size_x - 1){
-      isAvailableTofall = false;
+      isAvailableToFall = false;
       break;
     }
     else if(play_matrix[current_figure.coordinates[i][0] + 1][current_figure.coordinates[i][1]] == 1){
-      isAvailableTofall = false;
+      isAvailableToFall = false;
       break;
     }
   }
-  return isAvailableTofall;
+  return isAvailableToFall;
 }
 
+bool CheckFigurePositionLeft(){
+  bool isAvailableToLeft = true;
+  for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+    
+    if (current_figure.coordinates[i][1] == 0){
+      isAvailableToLeft = false;
+      break;
+    }
+    else if(play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1] - 1] == 1){
+      isAvailableToLeft = false;
+      break;
+    }
+  }
+  return isAvailableToLeft;
+}
+
+bool CheckFigurePositionRight(){
+  bool isAvailableToRight = true;
+  for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+    
+    if (current_figure.coordinates[i][1] == LED_matrix_size_y - 1){
+      isAvailableToRight = false;
+      break;
+    }
+    else if(play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1] + 1] == 1){
+      isAvailableToRight = false;
+      break;
+    }
+  }
+  return isAvailableToRight;
+}
 
 
 void setup() {
@@ -178,7 +235,8 @@ void setup() {
     pinMode(LED_row_pins[i], OUTPUT);
   }
   pinMode(NOISE_PIN, INPUT);
-  Game();
+  pinMode(LEFT_BTN, INPUT);
+  pinMode(RIGHT_BTN, INPUT);
 }
 
 
