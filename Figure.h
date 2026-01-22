@@ -21,8 +21,7 @@ public:
                     rotation_array[k][i][j] = rot_arr[k][i][j];
                 }
             }
-        }
-        
+        }       
     }
 
     void Rotate(){
@@ -31,9 +30,8 @@ public:
             coordinates[i][1] += rotation_array[current_rotation][i][1];
         }
 
-
         current_rotation++;
-        if (current_rotation > 4){
+        if (current_rotation > 3){
             current_rotation = 0;
         }
     }

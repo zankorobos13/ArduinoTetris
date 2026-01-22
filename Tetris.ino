@@ -2,12 +2,13 @@
 
 const int LED_matrix_size_x = 9;
 const int LED_matrix_size_y = 6;
-const int PWM_period_ms = 1;
+const int PWM_period_ms = 0;
 
-const int FALL_SPEED_MS = 1500;
+const int FALL_SPEED_MS = 500;
 const uint8_t NOISE_PIN = A4;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
+const uint8_t ROTATE_BTN = A5;
 const int DEBOUNCE_TIME_MS = 100;
 
 int I_spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
@@ -21,7 +22,7 @@ int I_rotation_array[4][3][2] = {
 int L_spawn_coordinates[3][2] = {{0, 2}, {1, 2}, {1, 3}};
 int L_rotation_array[4][3][2] = {
         {{1, 0}, {0, 1}, {-1, 0}},
-        {{0, 1}, {-1, 0}, {0 -1}},
+        {{0, 1}, {-1, 0}, {0, -1}},
         {{-1, 0}, {0, -1}, {1, 0}},
         {{0, -1}, {1, 0}, {0, 1}}
 };
@@ -54,6 +55,7 @@ int current_step_on_columns = 0;
 unsigned long long prev_ms_LED_matrix_control = 0;
 unsigned long long prev_ms_left = 0;
 unsigned long long prev_ms_right = 0;
+unsigned long long prev_ms_rotate = 0;
 unsigned long long ms = 0;
 
 void LED_matrix_update(){
@@ -92,15 +94,36 @@ void LED_matrix_control(){
 }
 
 
+
 bool isFigureOnMatrix = false;
 unsigned long long prev_ms_figure_fall = 0;
 Figure current_figure {L_spawn_coordinates, L_rotation_array, 0};
-// Подумать над рандомом
+bool a = false;
+
+void DEBUG(){
+  for(int i = 0; i < Figure::BLOCK_SIZE; i++){
+    Serial.print(i);
+    Serial.print(" i: ");
+    Serial.print(current_figure.coordinates[i][0]);
+    Serial.print(" j: ");
+    Serial.print(current_figure.coordinates[i][1]);
+    Serial.println();
+  }
+  for(int i = 0; i < LED_matrix_size_x; i++){
+    for(int j = 0; j < LED_matrix_size_y; j++){
+      Serial.print(play_matrix[i][j]);
+    }
+    Serial.println();
+  }
+  Serial.println("------------");
+
+}
+
 void Game(){
   if (!isFigureOnMatrix){
     int spawn_coordinates[3][2];
     int rotation_array[4][3][2];
-    if (random(2) == 0){
+    if (random(2) == 1){
       for (int i = 0; i < 3; i++){
         for (int j = 0; j < 2; j++){
             spawn_coordinates[i][j] = I_spawn_coordinates[i][j];
@@ -155,24 +178,29 @@ void Game(){
   
   int read_left = analogRead(LEFT_BTN);
   int read_right = analogRead(RIGHT_BTN);
-  //Serial.print(read_left);
-  //Serial.print(" ");
-  //Serial.println(read_right);
+  int read_rotate = analogRead(ROTATE_BTN);
 
   if (read_left > 512 && ms - prev_ms_left > DEBOUNCE_TIME_MS && CheckFigurePositionLeft()){
     for (int i = 0; i < Figure::BLOCK_SIZE; i++){
       play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
       current_figure.coordinates[i][1]--;
-      prev_ms_left = ms;
     }
+    prev_ms_left = ms;
   }
 
   if (read_right > 512 && ms - prev_ms_right > DEBOUNCE_TIME_MS && CheckFigurePositionRight()){
     for (int i = 0; i < Figure::BLOCK_SIZE; i++){
       play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
       current_figure.coordinates[i][1]++;
-      prev_ms_right = ms;
     }
+    prev_ms_right = ms;
+  }
+
+  if (read_rotate > 512 && ms - prev_ms_rotate > DEBOUNCE_TIME_MS && CheckFigureForRotation()){
+    for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+      play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
+    }
+    current_figure.Rotate();
   }
 }
 
@@ -223,6 +251,29 @@ bool CheckFigurePositionRight(){
   }
   return isAvailableToRight;
 }
+//Добавить проверку на соседние блоки (1)
+bool CheckFigureForRotation(){
+  bool isAvailableToRotate = true;
+  for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+    if(current_figure.coordinates[i][0] == 0 && current_figure.rotation_array[current_figure.current_rotation][i][0] == -1){
+      isAvailableToRotate = false;
+      break;
+    }
+    if(current_figure.coordinates[i][0] == LED_matrix_size_x - 1 && current_figure.rotation_array[current_figure.current_rotation][i][0] == 1){
+      isAvailableToRotate = false;
+      break;
+    }
+    if(current_figure.coordinates[i][1] == 0 && current_figure.rotation_array[current_figure.current_rotation][i][1] == -1){
+      isAvailableToRotate = false;
+      break;
+    }
+    if(current_figure.coordinates[i][1] == LED_matrix_size_y - 1 && current_figure.rotation_array[current_figure.current_rotation][i][1] == 1){
+      isAvailableToRotate = false;
+      break;
+    }
+  }
+  return isAvailableToRotate;
+}
 
 
 void setup() {
@@ -237,6 +288,7 @@ void setup() {
   pinMode(NOISE_PIN, INPUT);
   pinMode(LEFT_BTN, INPUT);
   pinMode(RIGHT_BTN, INPUT);
+  pinMode(ROTATE_BTN, INPUT);
 }
 
 
