@@ -1,7 +1,27 @@
+#include "Figure.h"
+
 const int LED_matrix_size_x = 9;
 const int LED_matrix_size_y = 6;
 const int PWM_period_ms = 1;
 
+const int FALL_SPEED_MS = 1500;
+const uint8_t NOISE_PIN = A4;
+
+int I_spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
+int I_rotation_array[4][3][2] = {
+        {{1, 1}, {0, 0}, {-1, -1}},
+        {{-1, 1}, {0, 0}, {1, -1}},
+        {{-1, -1}, {0, 0}, {1, 1}},
+        {{1, -1}, {0, 0}, {-1, 1}}
+};
+
+int L_spawn_coordinates[3][2] = {{0, 2}, {1, 2}, {1, 3}};
+int L_rotation_array[4][3][2] = {
+        {{1, 0}, {0, 1}, {-1, 0}},
+        {{0, 1}, {-1, 0}, {0 -1}},
+        {{-1, 0}, {0, -1}, {1, 0}},
+        {{0, -1}, {1, 0}, {0, 1}}
+};
 
 uint8_t play_matrix[LED_matrix_size_x][LED_matrix_size_y] = {
   {0, 0, 0, 0, 0, 0},
@@ -67,19 +87,98 @@ void LED_matrix_control(){
 }
 
 
+bool isFigureOnMatrix = false;
+unsigned long long prev_ms_figure_fall = 0;
+Figure current_figure {L_spawn_coordinates, L_rotation_array, 0};
+// Подумать над рандомом
+void Game(){
+  if (!isFigureOnMatrix){
+    int spawn_coordinates[3][2];
+    int rotation_array[4][3][2];
+    if (random(2) == 0){
+      for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 2; j++){
+            spawn_coordinates[i][j] = I_spawn_coordinates[i][j];
+        }
+      }
+      for (int k = 0; k < 4; k++){
+        for (int i = 0; i < 3; i++){
+          for (int j = 0; j < 2; j++){
+              rotation_array[k][i][j] = I_rotation_array[k][i][j];
+          }
+        }
+      }
+    }
+    else{
+      for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 2; j++){
+            spawn_coordinates[i][j] = L_spawn_coordinates[i][j];
+        }
+      }
+      for (int k = 0; k < 4; k++){
+        for (int i = 0; i < 3; i++){
+          for (int j = 0; j < 2; j++){
+              rotation_array[k][i][j] = L_rotation_array[k][i][j];
+          }
+        }
+      }
+    }
+    Figure new_figure {spawn_coordinates, rotation_array, 0};
+    current_figure = new_figure;
+    isFigureOnMatrix = true;
+  }
+  else{
+    for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+        play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 2;
+    }
 
+    if (ms - prev_ms_figure_fall >= FALL_SPEED_MS){
+      if(CheckFigurePositionForFall()){
+        for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+          play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
+          current_figure.coordinates[i][0]++;
+        }
+      }
+      else{
+        isFigureOnMatrix = false;
+        for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+          play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 1;
+        }
+      }
+      prev_ms_figure_fall = ms;
+    }
+  }
+}
 
+bool CheckFigurePositionForFall(){
+  bool isAvailableTofall = true;
+  for (int i = 0; i < Figure::BLOCK_SIZE; i++){
+    
+    if (current_figure.coordinates[i][0] == LED_matrix_size_x - 1){
+      isAvailableTofall = false;
+      break;
+    }
+    else if(play_matrix[current_figure.coordinates[i][0] + 1][current_figure.coordinates[i][1]] == 1){
+      isAvailableTofall = false;
+      break;
+    }
+  }
+  return isAvailableTofall;
+}
 
 
 
 void setup() {
   Serial.begin(9600);
+  randomSeed(analogRead(NOISE_PIN) + micros());
   for (int i = 0; i < LED_matrix_size_x; i++){
     pinMode(LED_column_pins[i], OUTPUT);
   }
   for (int i = 0; i < LED_matrix_size_y; i++){
     pinMode(LED_row_pins[i], OUTPUT);
   }
+  pinMode(NOISE_PIN, INPUT);
+  Game();
 }
 
 
@@ -89,4 +188,5 @@ void loop() {
 
   LED_matrix_update();
   LED_matrix_control();
+  Game();
 }

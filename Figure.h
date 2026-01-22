@@ -39,16 +39,24 @@ public:
     }
 };
 
-class I_Figure : public Figure{
+struct I_Figure{
 public:
-    int spawn_coordinates[BLOCK_SIZE][2] = {{0, 1}, {0, 2}, {0, 3}};
-    int rotation_array[4][BLOCK_SIZE][2] = {
+    static int spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
+    static int rotation_array[4][3][2] = {
         {{1, 1}, {0, 0}, {-1, -1}},
         {{-1, 1}, {0, 0}, {1, -1}},
         {{-1, -1}, {0, 0}, {1, 1}},
         {{1, -1}, {0, 0}, {-1, 1}}
     };
-    I_Figure() : Figure(spawn_coordinates, rotation_array, 0){
-        
-    }
+};
+
+struct L_Figure {
+public:
+    static int spawn_coordinates[3][2] = {{0, 2}, {1, 2}, {1, 3}};
+    static int rotation_array[4][3][2] = {
+        {{1, 0}, {0, 1}, {-1, 0}},
+        {{0, 1}, {-1, 0}, {0 -1}},
+        {{-1, 0}, {0, -1}, {1, 0}},
+        {{0, -1}, {1, 0}, {0, 1}}
+    };
 };
