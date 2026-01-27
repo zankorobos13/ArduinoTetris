@@ -6,7 +6,7 @@ public:
 
     int current_rotation = 0;
     int coordinates[BLOCK_SIZE][2];
-
+    
     Figure(int spawn_coords[BLOCK_SIZE][2], int rot_arr[4][BLOCK_SIZE][2], int curr_rot){
         current_rotation = curr_rot;
         for (int i = 0; i < BLOCK_SIZE; i++){

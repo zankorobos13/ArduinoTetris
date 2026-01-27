@@ -9,7 +9,7 @@ const uint8_t NOISE_PIN = A4;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
 const uint8_t ROTATE_BTN = A5;
-const int DEBOUNCE_TIME_MS = 100;
+const int DEBOUNCE_TIME_MS = 300;
 
 int I_spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
 int I_rotation_array[4][3][2] = {
@@ -118,7 +118,7 @@ void DEBUG(){
   Serial.println("------------");
 
 }
-
+// Вынести перемещение фигур в класс
 void Game(){
   if (!isFigureOnMatrix){
     int spawn_coordinates[3][2];
@@ -201,6 +201,7 @@ void Game(){
       play_matrix[current_figure.coordinates[i][0]][current_figure.coordinates[i][1]] = 0;
     }
     current_figure.Rotate();
+    prev_ms_rotate = ms;
   }
 }
 
@@ -251,27 +252,20 @@ bool CheckFigurePositionRight(){
   }
   return isAvailableToRight;
 }
-//Добавить проверку на соседние блоки (1)
+
 bool CheckFigureForRotation(){
   bool isAvailableToRotate = true;
+  
   for (int i = 0; i < Figure::BLOCK_SIZE; i++){
-    if(current_figure.coordinates[i][0] == 0 && current_figure.rotation_array[current_figure.current_rotation][i][0] == -1){
+    int new_x = current_figure.coordinates[i][0] + current_figure.rotation_array[current_figure.current_rotation][i][0];
+    int new_y = current_figure.coordinates[i][1] + current_figure.rotation_array[current_figure.current_rotation][i][1];
+
+    if (new_x < 0 || new_y < 0 || new_x > LED_matrix_size_x - 1 || new_y > LED_matrix_size_y - 1 || play_matrix[new_x][new_y] == 1){
       isAvailableToRotate = false;
-      break;
     }
-    if(current_figure.coordinates[i][0] == LED_matrix_size_x - 1 && current_figure.rotation_array[current_figure.current_rotation][i][0] == 1){
-      isAvailableToRotate = false;
-      break;
-    }
-    if(current_figure.coordinates[i][1] == 0 && current_figure.rotation_array[current_figure.current_rotation][i][1] == -1){
-      isAvailableToRotate = false;
-      break;
-    }
-    if(current_figure.coordinates[i][1] == LED_matrix_size_y - 1 && current_figure.rotation_array[current_figure.current_rotation][i][1] == 1){
-      isAvailableToRotate = false;
-      break;
-    }
+    
   }
+  
   return isAvailableToRotate;
 }
 
