@@ -4,7 +4,7 @@ const int LED_matrix_size_x = 9;
 const int LED_matrix_size_y = 6;
 const int PWM_period_ms = 0;
 
-const int FALL_SPEED_MS = 1000;
+int FALL_SPEED_MS = 1000;
 const uint8_t NOISE_PIN = A4;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
@@ -205,6 +205,7 @@ void Game(){
   }
 
   BlockRowCheckAndClear();
+  SetFallSpeedByTime();
 }
 
 bool CheckFigurePositionForFall(){
@@ -294,7 +295,11 @@ void BlockRowCheckAndClear(){
   }
 }
 
-
+void SetFallSpeedByTime(){
+  if (FALL_SPEED_MS > 100){
+    FALL_SPEED_MS = 1000 - (ms/300);
+  }
+}
 
 void setup() {
   Serial.begin(9600);
