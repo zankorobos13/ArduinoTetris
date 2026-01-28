@@ -4,7 +4,7 @@ const int LED_matrix_size_x = 9;
 const int LED_matrix_size_y = 6;
 const int PWM_period_ms = 0;
 
-const int FALL_SPEED_MS = 500;
+const int FALL_SPEED_MS = 1000;
 const uint8_t NOISE_PIN = A4;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
@@ -203,6 +203,8 @@ void Game(){
     current_figure.Rotate();
     prev_ms_rotate = ms;
   }
+
+  BlockRowCheckAndClear();
 }
 
 bool CheckFigurePositionForFall(){
@@ -268,6 +270,30 @@ bool CheckFigureForRotation(){
   
   return isAvailableToRotate;
 }
+
+void BlockRowCheckAndClear(){
+  for (int i = 0; i < LED_matrix_size_x; i++){
+    bool isFullRow = true;
+    for (int j = 0; j < LED_matrix_size_y; j++){
+      if (play_matrix[i][j] != 1){
+        isFullRow = false;
+        break;
+      }
+    }
+    if (isFullRow){
+      for (int j = 0; j < LED_matrix_size_y; j++){
+        play_matrix[i][j] = 0;
+      }
+      for (int j = i; j > 0; j--){
+        for (int k = 0; k < LED_matrix_size_y; k++){
+          play_matrix[j][k] = play_matrix[j-1][k];
+          play_matrix[j-1][k] = 0;
+        }
+      }
+    }
+  }
+}
+
 
 
 void setup() {
