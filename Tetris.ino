@@ -9,7 +9,7 @@ const uint8_t NOISE_PIN = A4;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
 const uint8_t ROTATE_BTN = A5;
-const int DEBOUNCE_TIME_MS = 300;
+int DEBOUNCE_TIME_MS = 300;
 
 int I_spawn_coordinates[3][2] = {{0, 1}, {0, 2}, {0, 3}};
 int I_rotation_array[4][3][2] = {
@@ -121,6 +121,7 @@ void DEBUG(){
 // Вынести перемещение фигур в класс
 void Game(){
   if (!isFigureOnMatrix){
+    int rotation = 0;
     int spawn_coordinates[3][2];
     int rotation_array[4][3][2];
     if (random(2) == 1){
@@ -150,6 +151,7 @@ void Game(){
           }
         }
       }
+      rotation = random(4);
     }
     Figure new_figure {spawn_coordinates, rotation_array, 0};
     current_figure = new_figure;
@@ -298,6 +300,9 @@ void BlockRowCheckAndClear(){
 void SetFallSpeedByTime(){
   if (FALL_SPEED_MS > 100){
     FALL_SPEED_MS = 1000 - (ms/300);
+  }
+  if (DEBOUNCE_TIME_MS > 100){
+    DEBOUNCE_TIME_MS = 300 - (ms/1350);
   }
 }
 
