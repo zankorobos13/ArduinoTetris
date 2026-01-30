@@ -5,7 +5,7 @@ const int LED_matrix_size_y = 6;
 const int PWM_period_ms = 0;
 
 int FALL_SPEED_MS = 1000;
-const uint8_t NOISE_PIN = A4;
+const uint8_t NOISE_PIN = A7;
 const uint8_t LEFT_BTN = A6;
 const uint8_t RIGHT_BTN = A4;
 const uint8_t ROTATE_BTN = A5;
@@ -156,6 +156,12 @@ void Game(){
     Figure new_figure {spawn_coordinates, rotation_array, 0};
     current_figure = new_figure;
     isFigureOnMatrix = true;
+
+    for (int i = 0; i < rotation; i++){
+      if(CheckFigureForRotation()){
+        current_figure.Rotate();
+      }
+    }
   }
   
   for (int i = 0; i < Figure::BLOCK_SIZE; i++){
